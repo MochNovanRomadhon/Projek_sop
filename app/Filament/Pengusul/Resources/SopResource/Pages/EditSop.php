@@ -19,6 +19,10 @@ class EditSop extends EditRecord
         ];
     }
 
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Perubahan berhasil disimpan';
+    }
     // [BARU] Mengubah nama tombol "Save changes" menjadi "Simpan Perubahan"
     protected function getSaveFormAction(): \Filament\Actions\Action
     {
@@ -48,7 +52,7 @@ class EditSop extends EditRecord
             
             Notification::make()
                 ->title('Perubahan Diajukan')
-                ->body('Dokumen SOP kini berstatus "Menunggu Verifikasi" untuk diperiksa ulang.')
+                ->body('Dokumen SOP diajkuakn untuk diproses verifikasi.')
                 ->success()
                 ->send();
         }

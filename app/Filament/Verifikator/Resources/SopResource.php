@@ -14,7 +14,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter; 
 use Illuminate\Support\HtmlString;
 use Illuminate\Database\Eloquent\Builder;
-
+use Illuminate\Support\Facades\Storage;
 class SopResource extends Resource
 {
     protected static ?string $model = Sop::class;
@@ -43,9 +43,10 @@ class SopResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('judul')->label('Nama SOP'),
                         Infolists\Components\TextEntry::make('nomor_sk')->label('Nomor SK'),
-                        Infolists\Components\TextEntry::make('unit.nama')->label('Unit Pengusul'),
+                        Infolists\Components\TextEntry::make('unit.nama')->label('Unit'),
+                        Infolists\Components\TextEntry::make('unit.direktorat.nama')->label('direktorat'),
                         Infolists\Components\TextEntry::make('jenis')->badge()->color('info'),
-                        Infolists\Components\TextEntry::make('tanggal_berlaku')->date('d F Y'),
+                        Infolists\Components\TextEntry::make('tanggal_berlaku')->label('Tanggal Pengesahan')->date('d M Y'),
                         
                         // [PERBAIKAN TAMPILAN STATUS DI VIEW DETAIL]
                         Infolists\Components\TextEntry::make('status')->badge()
@@ -62,19 +63,15 @@ class SopResource extends Resource
                             }),
                     ])->columns(3),
 
-                Infolists\Components\Section::make('Preview File PDF')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('file_path')
-                            ->label('')
-                            ->formatStateUsing(fn ($state) => new HtmlString('
-                                <iframe src="'.asset('storage/'.$state).'" width="100%" height="600px" style="border: 1px solid #ddd; border-radius: 8px;">
-                                    Browser Anda tidak mendukung preview PDF. 
-                                    <a href="'.asset('storage/'.$state).'" target="_blank">Download PDF</a>
-                                </iframe>
-                            '))
-                            ->columnSpanFull(),
-                    ]),
-            ]);
+        Infolists\Components\Section::make('Preview Dokumen')
+            ->schema([
+                Infolists\Components\ViewEntry::make('file_path') // Nama kolom di database
+                    ->label('') // Kosongkan label agar tampilan penuh
+                    ->view('filament.infolists.pdf-preview') // Lokasi file blade yang akan kita buat
+                    ->columnSpanFull(),
+                ])
+                ->collapsible(),
+                        ]);
     }
 
     public static function table(Table $table): Table
@@ -83,9 +80,10 @@ class SopResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nomor_sk')->label('No SK'),
                 Tables\Columns\TextColumn::make('judul')->label('Nama SOP')->searchable()->wrap(),
-                Tables\Columns\TextColumn::make('tanggal_berlaku')->date('d M Y'),
-                Tables\Columns\TextColumn::make('unit.nama')->label('Unit'),
                 Tables\Columns\TextColumn::make('jenis')->badge()->color('info'),
+                Tables\Columns\TextColumn::make('tanggal_berlaku')->label('Tanggal Pengesahan')->date('d M Y'),
+                Tables\Columns\TextColumn::make('unit.direktorat.nama')->label('Direktorat'),
+                Tables\Columns\TextColumn::make('unit.nama')->label('Unit'),
                 
                 // [PERBAIKAN TAMPILAN STATUS DI TABEL]
                 Tables\Columns\TextColumn::make('status')

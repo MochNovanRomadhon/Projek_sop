@@ -34,4 +34,9 @@ class CreateSop extends CreateRecord
         
         return $data;
     }
+
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        return 'SOP berhasil diajukan!';
+    }
 }

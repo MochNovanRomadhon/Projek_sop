@@ -30,10 +30,5 @@ class ListSops extends ListRecords
         ];
     }
 
-    public function getSubheading(): ?string
-    {
-        $user = auth()->user();
-        $unitName = $user->unit->nama ?? '-';
-        return "Unit Kerja: {$unitName}";
-    }
+    
 }

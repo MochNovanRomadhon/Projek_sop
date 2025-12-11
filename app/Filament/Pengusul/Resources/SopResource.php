@@ -68,14 +68,9 @@ class SopResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('judul')->label('Nama SOP')->searchable()->wrap()->weight('bold')->description(fn (Sop $record) => $record->nomor_sk),
+                Tables\Columns\TextColumn::make('nomor_sk')->label('No SK'),    
+                Tables\Columns\TextColumn::make('judul')->label('Nama SOP')->searchable()->wrap()->weight('bold'),
                 Tables\Columns\TextColumn::make('jenis')->badge()->color('info'),
-                
-                Tables\Columns\TextColumn::make('tanggal_berlaku')
-                    ->label('Tgl Pengesahan')
-                    ->date('d M Y')
-                    ->sortable(),
-
                 // [LOGIKA WARNING]
                 Tables\Columns\TextColumn::make('expired_at')
                     ->label('Berlaku Sampai')
@@ -113,7 +108,7 @@ class SopResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'Disetujui' => 'Aktif',
                         'Menunggu Verifikasi' => 'Proses Verifikasi',
-                        'Ditolak' => 'Ditolak (Perlu Revisi)',
+                        'Ditolak' => 'Ditolak',
                         'Review' => 'Review Tahunan',
                         'Riwayat' => 'Riwayat',
                         default => $state,
@@ -129,7 +124,6 @@ class SopResource extends Resource
                     ->visible(fn (Sop $record) => self::needsReview($record))
                     ->url(fn (Sop $record) => Pages\ReviewSop::getUrl(['record' => $record])),
 
-                Tables\Actions\ViewAction::make(),
                 
                 Tables\Actions\Action::make('revisi')
                     ->label('Perbaiki')
@@ -141,7 +135,8 @@ class SopResource extends Resource
                 Tables\Actions\Action::make('edit_custom')
                     ->label('Ajukan Perubahan')
                     ->color('info')
-                    ->icon('heroicon-o-pencil')
+                    ->button()
+                    ->icon('heroicon-o-pencil-square')
                     ->url(fn (Sop $record) => Pages\EditSop::getUrl(['record' => $record]))
                     ->visible(fn (Sop $record) => in_array($record->status, ['Draft', 'Disetujui']) && !self::needsReview($record)),
 
@@ -217,9 +212,16 @@ class SopResource extends Resource
                     ->state(fn ($record) => Carbon::parse($record->tanggal_berlaku)->addYears(3)->format('d M Y'))
                     ->badge()->color('danger'),
                 Infolists\Components\TextEntry::make('status')->badge()->color('success'),
-                Infolists\Components\TextEntry::make('file_path')->label('File')->url(fn ($record) => asset('storage/' . $record->file_path))->openUrlInNewTab()->color('primary'),
-            ])->columns(2)
-        ]);
+            ])->columns(2),
+            Infolists\Components\Section::make('Preview Dokumen')
+             ->schema([
+             Infolists\Components\ViewEntry::make('file_path') // Nama kolom di database
+            ->label('') // Kosongkan label agar tampilan penuh
+            ->view('filament.infolists.pdf-preview') // Lokasi file blade yang akan kita buat
+            ->columnSpanFull(),
+        ])
+        ->collapsible(),
+                ]);
     }
 
     public static function sendNotificationToVerifikator($record, $type)

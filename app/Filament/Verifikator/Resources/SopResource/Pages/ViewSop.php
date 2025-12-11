@@ -23,6 +23,9 @@ class ViewSop extends ViewRecord
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')
                 ->visible(fn (Sop $record) => $record->status === 'Menunggu Verifikasi')
+                ->modalHeading('Tolak Pengajuan SOP')
+                ->modalDescription('Silakan berikan alasan penolakan agar pengusul dapat memperbaikinya.')
+                ->modalSubmitActionLabel('Kirim Penolakan')
                 ->form([
                     Forms\Components\Textarea::make('catatan_revisi')
                         ->label('Catatan Revisi (Wajib Diisi)')
@@ -59,7 +62,9 @@ class ViewSop extends ViewRecord
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
                 ->visible(fn (Sop $record) => $record->status === 'Menunggu Verifikasi')
-                ->requiresConfirmation()
+                ->modalHeading('Konfirmasi Persetujuan SOP') // Judul di atas
+                ->modalDescription('Apakah Anda yakin dokumen ini sudah valid?') // Tulisan di bawah judul
+                ->modalSubmitActionLabel('Terima ') // Tulisan di tombol konfirmasi
                 ->action(function (Sop $record) {
                     // 1. Update Status
                     $record->update([
@@ -75,7 +80,7 @@ class ViewSop extends ViewRecord
 
                     Notification::make()
                         ->title('Selamat! SOP Diterima')
-                        ->body("SOP '{$record->judul}' telah disetujui dan statusnya kini Aktif.")
+                        ->body("SOP '{$record->judul}' telah disetujui.")
                         ->success() // Warna Hijau
                         ->icon('heroicon-o-sparkles')
                         ->sendToDatabase($pengusul);
