@@ -6,19 +6,14 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        // Kode konfigurasi polling dihapus karena menyebabkan error pada versi ini.
+        // Filament akan menggunakan polling default (30 detik).
     }
 }

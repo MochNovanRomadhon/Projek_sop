@@ -6,78 +6,96 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
-use BezhanSalleh\FilamentShield\Support\Utils;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset permission cache
+        // 1. Reset permission cache
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        /**
-         * ✅ Daftar Role SOP RS
-         */
+        // 2. Daftar 4 Role Sesuai PDF SOPan
         $roles = [
-            'super_admin',
-            'admin',
-            'verifikator',
-            'pengusul',
-            'pegawai',
+            'admin',       // Mengelola User & Master Data
+            'verifikator', // Humas (Approve/Reject)
+            'pengusul',    // Kepala Unit (Upload)
+            'pegawai'      // Staff (View Only)
         ];
 
         foreach ($roles as $role) {
-            Role::firstOrCreate([
-                'name' => $role,
-                'guard_name' => 'web',
-            ]);
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
-        /**
-         * ✅ Generate otomatis permission Filament
-         */
-        $permissions = Utils::getPermissionModels();
+        // 3. GENERATE PERMISSION SECARA OTOMATIS
+        $entities = ['user', 'unit', 'direktorat', 'sop'];
+        $actions = [
+            'view_any',    // Lihat daftar
+            'view',        // Lihat detail
+            'create',      // Buat
+            'update',      // Edit
+            'delete',      // Hapus
+            'restore',     // Restore (Soft Delete)
+            'force_delete' // Hapus Permanen
+        ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => 'web',
-            ]);
+        // Loop permission CRUD standar
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                Permission::firstOrCreate([
+                    'name' => "{$action}_{$entity}", 
+                    'guard_name' => 'web'
+                ]);
+            }
         }
 
-        /**
-         * ✅ Hak Akses
-         */
-        $superAdmin = Role::where('name', 'super_admin')->first();
-        $admin      = Role::where('name', 'admin')->first();
-        $verifikator= Role::where('name', 'verifikator')->first();
-        $pengusul   = Role::where('name', 'pengusul')->first();
+        // 4. Tambahkan Permission KHUSUS (Custom Workflow)
+        $customPermissions = [
+            'approve_sop',
+            'reject_sop'
+        ];
 
-        // Super Admin → semua akses
-        $superAdmin->syncPermissions(Permission::all());
+        foreach ($customPermissions as $p) {
+            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
+        }
 
-        // Admin → semua kecuali delete user
-        $admin->syncPermissions(
-            Permission::whereNotIn('name', [
-                'delete_user',
-            ])->get()
-        );
+        // --- 5. ASSIGNMENT PERMISSION KE ROLE ---
 
-        // Verifikator → view + update SOP
-        $verifikator->syncPermissions(
-            Permission::whereIn('name', [
-                'view_sop',
-                'update_sop',
-                'approve_sop',
-            ])->get()
-        );
+        // A. ADMIN (Sekarang jadi Role Tertinggi)
+        // Admin mengelola User, Unit, Direktorat, dan Bisa Melihat SOP
+        Role::where('name', 'admin')->first()->givePermissionTo([
+            // User Management (Full)
+            'view_any_user', 'view_user', 'create_user', 'update_user', 'delete_user',
+            // Unit Management (Full)
+            'view_any_unit', 'view_unit', 'create_unit', 'update_unit', 'delete_unit',
+            // Direktorat Management (Full)
+            'view_any_direktorat', 'view_direktorat', 'create_direktorat', 'update_direktorat', 'delete_direktorat',
+            // SOP (Hanya Lihat, Admin tidak ikut workflow approval)
+            'view_any_sop', 'view_sop'
+        ]);
 
-        // Pengusul → create & view SOP
-        $pengusul->syncPermissions(
-            Permission::whereIn('name', [
-                'create_sop',
-                'view_sop',
-            ])->get()
-        );
+        // B. VERIFIKATOR (Humas - Approve/Reject)
+        Role::where('name', 'verifikator')->first()->givePermissionTo([
+            // SOP Workflow
+            'view_any_sop', 'view_sop', 
+            'update_sop', // Perlu update untuk mengubah status
+            'approve_sop', 'reject_sop', // Tombol khusus
+            // Master Data (Read Only - untuk referensi)
+            'view_any_unit', 'view_unit',
+            'view_any_direktorat', 'view_direktorat'
+        ]);
+
+        // C. PENGUSUL (Kepala Unit - Upload)
+        Role::where('name', 'pengusul')->first()->givePermissionTo([
+            // SOP Management
+            'view_any_sop', 'view_sop', 'create_sop', 
+            'update_sop', 'delete_sop', // Dibatasi policy hanya untuk draft sendiri
+            // Master Data (Read Only - untuk dropdown form)
+            'view_any_unit', 'view_unit'
+        ]);
+
+        // D. PEGAWAI (View Only)
+        Role::where('name', 'pegawai')->first()->givePermissionTo([
+            'view_any_sop', 'view_sop'
+        ]);
     }
 }

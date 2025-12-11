@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy
@@ -25,9 +24,10 @@ class UserPolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function view(User $user): bool
+    public function view(User $user, User $model): bool
     {
         return $user->can('view_user');
     }
@@ -47,9 +47,10 @@ class UserPolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function update(User $user): bool
+    public function update(User $user, User $model): bool
     {
         return $user->can('update_user');
     }
@@ -58,9 +59,10 @@ class UserPolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function delete(User $user): bool
+    public function delete(User $user, User $model): bool
     {
         return $user->can('delete_user');
     }
@@ -80,9 +82,10 @@ class UserPolicy
      * Determine whether the user can permanently delete.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function forceDelete(User $user): bool
+    public function forceDelete(User $user, User $model): bool
     {
         return $user->can('force_delete_user');
     }
@@ -102,9 +105,10 @@ class UserPolicy
      * Determine whether the user can restore.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function restore(User $user): bool
+    public function restore(User $user, User $model): bool
     {
         return $user->can('restore_user');
     }
@@ -121,12 +125,13 @@ class UserPolicy
     }
 
     /**
-     * Determine whether the user can bulk restore.
+     * Determine whether the user can replicate.
      *
      * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $model
      * @return bool
      */
-    public function replicate(User $user): bool
+    public function replicate(User $user, User $model): bool
     {
         return $user->can('replicate_user');
     }

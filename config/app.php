@@ -165,9 +165,15 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
+        
+        // Filament Panels (Admin, Pengusul, Verifikator, Pegawai)
         App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\PengusulPanelProvider::class,
+        App\Providers\Filament\VerifikatorPanelProvider::class,
+        App\Providers\Filament\PegawaiPanelProvider::class,
+        
         App\Providers\RouteServiceProvider::class,
     ])->toArray(),
 

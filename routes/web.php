@@ -1,18 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PublicSopController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+// ROUTE HALAMAN DEPAN (PUBLIC ACCESS)
+Route::get('/', [PublicSopController::class, 'index'])->name('home');
+Route::get('/unit/{id}', [PublicSopController::class, 'show'])->name('public.unit');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// ROUTE LOGIN (Ini mengarah ke halaman login Filament jika user mengakses /login)
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');

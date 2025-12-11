@@ -1,0 +1,2024 @@
+﻿diff --git a/app/Filament/Resources/DirektoratResource.php b/app/Filament/Resources/DirektoratResource.php
+deleted file mode 100644
+index dc9fddf..0000000
+--- a/app/Filament/Resources/DirektoratResource.php
++++ /dev/null
+@@ -1,97 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources;
+-
+-use App\Filament\Resources\DirektoratResource\Pages;
+-use App\Filament\Resources\DirektoratResource\RelationManagers;
+-use App\Models\Direktorat;
+-use Filament\Forms;
+-use Filament\Forms\Form;
+-use Filament\Resources\Resource;
+-use Filament\Tables;
+-use Filament\Tables\Table;
+-use Filament\Tables\Columns\Layout\Stack;
+-use Filament\Tables\Columns\TextColumn;
+-use Filament\Support\Enums\FontWeight;
+-
+-class DirektoratResource extends Resource
+-{
+-    protected static ?string $model = Direktorat::class;
+-
+-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+-    protected static ?string $navigationLabel = 'Direktorat (Folder)';
+-
+-public static function form(Form $form): Form
+-{
+-    return $form
+-        ->schema([
+-            Forms\Components\TextInput::make('nama') // SESUAI DATABASE
+-                ->required()
+-                ->maxLength(255)
+-                ->label('Nama Direktorat'),
+-                
+-            Forms\Components\TextInput::make('kode') // Tambahan sesuai migrasi
+-                ->label('Kode Direktorat'),
+-        ]);
+-}
+-
+-public static function table(Table $table): Table
+-{
+-    return $table
+-        ->columns([
+-            Stack::make([
+-                TextColumn::make('icon_folder')
+-                    ->default('­ƒôé') 
+-                    ->extraAttributes(['class' => 'text-6xl text-center pb-2']), 
+-
+-                TextColumn::make('nama') // SESUAI DATABASE
+-                    ->weight(FontWeight::Bold)
+-                    ->alignCenter()
+-                    ->searchable(),
+-
+-                TextColumn::make('units_count')
+-                    ->counts('units')
+-                    ->formatStateUsing(fn ($state) => "$state Unit")
+-                    ->color('gray')
+-                    ->alignCenter()
+-                    ->size(TextColumn\TextColumnSize::ExtraSmall),
+-            ])->space(2),
+-        ])
+-            ->contentGrid([
+-                'md' => 2,
+-                'xl' => 4, // 4 Kolom folder per baris
+-            ])
+-            ->actions([
+-                // Saat diklik, masuk ke View Page (untuk melihat isinya/Unit)
+-                Tables\Actions\ViewAction::make()
+-                    ->label('Buka Folder')
+-                    ->button(),
+-                Tables\Actions\EditAction::make()
+-                    ->iconButton(),
+-            ])
+-            ->bulkActions([
+-                Tables\Actions\BulkActionGroup::make([
+-                    Tables\Actions\DeleteBulkAction::make(),
+-                ]),
+-            ]);
+-    }
+-
+-    public static function getRelations(): array
+-    {
+-        // Pastikan Relation Manager ini terdaftar!
+-        return [
+-            RelationManagers\UnitsRelationManager::class,
+-        ];
+-    }
+-
+-    public static function getPages(): array
+-    {
+-        return [
+-            'index' => Pages\ListDirektorats::route('/'),
+-            'create' => Pages\CreateDirektorat::route('/create'),
+-            // Kita butuh page View untuk menampilkan Relation Manager
+-            'view' => Pages\ViewDirektorat::route('/{record}'), 
+-            'edit' => Pages\EditDirektorat::route('/{record}/edit'),
+-        ];
+-    }
+-}
+\ No newline at end of file
+diff --git a/app/Filament/Resources/DirektoratResource/Pages/CreateDirektorat.php b/app/Filament/Resources/DirektoratResource/Pages/CreateDirektorat.php
+deleted file mode 100644
+index 768b880..0000000
+--- a/app/Filament/Resources/DirektoratResource/Pages/CreateDirektorat.php
++++ /dev/null
+@@ -1,12 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\DirektoratResource\Pages;
+-
+-use App\Filament\Resources\DirektoratResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\CreateRecord;
+-
+-class CreateDirektorat extends CreateRecord
+-{
+-    protected static string $resource = DirektoratResource::class;
+-}
+diff --git a/app/Filament/Resources/DirektoratResource/Pages/EditDirektorat.php b/app/Filament/Resources/DirektoratResource/Pages/EditDirektorat.php
+deleted file mode 100644
+index f2593ca..0000000
+--- a/app/Filament/Resources/DirektoratResource/Pages/EditDirektorat.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\DirektoratResource\Pages;
+-
+-use App\Filament\Resources\DirektoratResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\EditRecord;
+-
+-class EditDirektorat extends EditRecord
+-{
+-    protected static string $resource = DirektoratResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\DeleteAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/DirektoratResource/Pages/ListDirektorats.php b/app/Filament/Resources/DirektoratResource/Pages/ListDirektorats.php
+deleted file mode 100644
+index 1086d97..0000000
+--- a/app/Filament/Resources/DirektoratResource/Pages/ListDirektorats.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\DirektoratResource\Pages;
+-
+-use App\Filament\Resources\DirektoratResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\ListRecords;
+-
+-class ListDirektorats extends ListRecords
+-{
+-    protected static string $resource = DirektoratResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\CreateAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/DirektoratResource/Pages/ViewDirektorat.php b/app/Filament/Resources/DirektoratResource/Pages/ViewDirektorat.php
+deleted file mode 100644
+index 608cd46..0000000
+--- a/app/Filament/Resources/DirektoratResource/Pages/ViewDirektorat.php
++++ /dev/null
+@@ -1,12 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\DirektoratResource\Pages;
+-
+-use App\Filament\Resources\DirektoratResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\ViewRecord;
+-
+-class ViewDirektorat extends ViewRecord
+-{
+-    protected static string $resource = DirektoratResource::class;
+-}
+diff --git a/app/Filament/Resources/DirektoratResource/RelationManagers/UnitsRelationManager.php b/app/Filament/Resources/DirektoratResource/RelationManagers/UnitsRelationManager.php
+deleted file mode 100644
+index bef2ff0..0000000
+--- a/app/Filament/Resources/DirektoratResource/RelationManagers/UnitsRelationManager.php
++++ /dev/null
+@@ -1,73 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\DirektoratResource\RelationManagers;
+-
+-use App\Filament\Resources\SopResource;
+-use App\Models\Unit;
+-use Filament\Forms;
+-use Filament\Forms\Form;
+-use Filament\Resources\RelationManagers\RelationManager;
+-use Filament\Tables;
+-use Filament\Tables\Table;
+-use Filament\Tables\Columns\Layout\Stack;
+-use Filament\Tables\Columns\TextColumn;
+-use Filament\Support\Enums\FontWeight;
+-
+-class UnitsRelationManager extends RelationManager
+-{
+-    protected static string $relationship = 'units';
+-    protected static ?string $title = 'Unit Kerja (Sub-Folder)';
+-
+-    public function form(Form $form): Form
+-    {
+-        return $form
+-            ->schema([
+-                Forms\Components\TextInput::make('name')
+-                    ->required()
+-                    ->maxLength(255),
+-            ]);
+-    }
+-
+-public function table(Table $table): Table
+-{
+-    return $table
+-        ->recordTitleAttribute('nama') // SESUAI DATABASE
+-        ->columns([
+-            Stack::make([
+-                TextColumn::make('icon')
+-                    ->default('­ƒôü') 
+-                    ->extraAttributes(['class' => 'text-5xl text-center pb-2']), 
+-                
+-                TextColumn::make('nama') // SESUAI DATABASE
+-                    ->weight(FontWeight::Bold)
+-                    ->alignCenter(),
+-
+-                TextColumn::make('sops_count')
+-                    ->counts('sops')
+-                    ->formatStateUsing(fn ($state) => "$state SOP")
+-                    ->alignCenter()
+-                    ->color('gray'),
+-            ])
+-        ])
+-            ->contentGrid([
+-                'md' => 3,
+-                'xl' => 4,
+-            ])
+-            ->actions([
+-                // AKSI UTAMA: Link ke Halaman SOP Resource dengan Filter Unit ID
+-                Tables\Actions\Action::make('open_sops')
+-                    ->label('Lihat SOP')
+-                    ->icon('heroicon-m-folder-open')
+-                    ->button()
+-                    ->url(fn (Unit $record): string => 
+-                        SopResource::getUrl('index', [
+-                            'tableFilters' => [
+-                                'unit_id' => [ 
+-                                    'value' => $record->id,
+-                                ],
+-                            ],
+-                        ])
+-                    ),
+-            ]);
+-    }
+-}
+\ No newline at end of file
+diff --git a/app/Filament/Resources/SopResource.php b/app/Filament/Resources/SopResource.php
+deleted file mode 100644
+index 0d866c3..0000000
+--- a/app/Filament/Resources/SopResource.php
++++ /dev/null
+@@ -1,110 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources;
+-
+-use App\Filament\Resources\SopResource\Pages;
+-use App\Models\Sop;
+-use Filament\Forms;
+-use Filament\Forms\Form;
+-use Filament\Resources\Resource;
+-use Filament\Tables;
+-use Filament\Tables\Table;
+-use Filament\Tables\Filters\SelectFilter;
+-use Illuminate\Database\Eloquent\Builder;
+-
+-class SopResource extends Resource
+-{
+-    protected static ?string $model = Sop::class;
+-
+-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+-
+-    public static function form(Form $form): Form
+-{
+-    return $form
+-        ->schema([
+-            Forms\Components\Section::make()
+-                ->schema([
+-                    Forms\Components\TextInput::make('judul') // SESUAI DATABASE
+-                        ->required()
+-                        ->label('Judul SOP'),
+-                    
+-                    Forms\Components\TextInput::make('nomor_sk') // Tambahan sesuai migrasi
+-                        ->label('Nomor SK'),
+-
+-                    Forms\Components\Select::make('unit_id')
+-                        ->relationship('unit', 'nama') // Relasi ke 'nama' unit
+-                        ->searchable()
+-                        ->preload()
+-                        ->required(),
+-
+-                    Forms\Components\FileUpload::make('file_path')
+-                        ->label('File SOP (PDF)')
+-                        ->directory('sops')
+-                        ->acceptedFileTypes(['application/pdf']),
+-                        
+-                    // Field jenis (SOP / SOP AP) sesuai migrasi
+-                    Forms\Components\Select::make('jenis')
+-                        ->options([
+-                            'SOP' => 'SOP',
+-                            'SOP AP' => 'SOP AP',
+-                        ])
+-                        ->default('SOP')
+-                        ->required(),
+-                ])
+-        ]);
+-}
+-
+-public static function table(Table $table): Table
+-{
+-    return $table
+-        ->columns([
+-            Tables\Columns\TextColumn::make('judul') // SESUAI DATABASE
+-                ->searchable()
+-                ->description(fn (Sop $record) => $record->unit->nama ?? '-') // Pakai 'nama'
+-                ->label('Judul SOP'),
+-            
+-            Tables\Columns\TextColumn::make('status')
+-                ->badge()
+-                ->color(fn (string $state): string => match ($state) {
+-                    'Draft' => 'gray',
+-                    'Menunggu Verifikasi' => 'warning',
+-                    'Disetujui' => 'success',
+-                    'Ditolak' => 'danger',
+-                    'Arsip' => 'info',
+-                    default => 'gray',
+-                }),
+-            
+-            Tables\Columns\TextColumn::make('updated_at')
+-                ->dateTime(),
+-        ])
+-        ->filters([
+-            SelectFilter::make('unit_id')
+-                ->relationship('unit', 'nama') // Pakai 'nama'
+-                ->label('Unit Kerja'),
+-        ])
+-            ->actions([
+-                Tables\Actions\EditAction::make(),
+-                Tables\Actions\ViewAction::make(),
+-            ])
+-            ->bulkActions([
+-                Tables\Actions\BulkActionGroup::make([
+-                    Tables\Actions\DeleteBulkAction::make(),
+-                ]),
+-            ]);
+-    }
+-    
+-    // ... getPages dsb biarkan default
+-    public static function getRelations(): array
+-    {
+-        return [];
+-    }
+-
+-    public static function getPages(): array
+-    {
+-        return [
+-            'index' => Pages\ListSops::route('/'),
+-            'create' => Pages\CreateSop::route('/create'),
+-            'edit' => Pages\EditSop::route('/{record}/edit'),
+-        ];
+-    }
+-}
+\ No newline at end of file
+diff --git a/app/Filament/Resources/SopResource/Pages/CreateSop.php b/app/Filament/Resources/SopResource/Pages/CreateSop.php
+deleted file mode 100644
+index 66adac9..0000000
+--- a/app/Filament/Resources/SopResource/Pages/CreateSop.php
++++ /dev/null
+@@ -1,12 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\SopResource\Pages;
+-
+-use App\Filament\Resources\SopResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\CreateRecord;
+-
+-class CreateSop extends CreateRecord
+-{
+-    protected static string $resource = SopResource::class;
+-}
+diff --git a/app/Filament/Resources/SopResource/Pages/EditSop.php b/app/Filament/Resources/SopResource/Pages/EditSop.php
+deleted file mode 100644
+index 490efed..0000000
+--- a/app/Filament/Resources/SopResource/Pages/EditSop.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\SopResource\Pages;
+-
+-use App\Filament\Resources\SopResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\EditRecord;
+-
+-class EditSop extends EditRecord
+-{
+-    protected static string $resource = SopResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\DeleteAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/SopResource/Pages/ListSops.php b/app/Filament/Resources/SopResource/Pages/ListSops.php
+deleted file mode 100644
+index 2447e55..0000000
+--- a/app/Filament/Resources/SopResource/Pages/ListSops.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\SopResource\Pages;
+-
+-use App\Filament\Resources\SopResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\ListRecords;
+-
+-class ListSops extends ListRecords
+-{
+-    protected static string $resource = SopResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\CreateAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/UnitResource.php b/app/Filament/Resources/UnitResource.php
+deleted file mode 100644
+index 650dab3..0000000
+--- a/app/Filament/Resources/UnitResource.php
++++ /dev/null
+@@ -1,83 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources;
+-
+-use App\Filament\Resources\UnitResource\Pages;
+-use App\Models\Unit;
+-use Filament\Forms;
+-use Filament\Forms\Form;
+-use Filament\Resources\Resource;
+-use Filament\Tables;
+-use Filament\Tables\Table;
+-
+-class UnitResource extends Resource
+-{
+-    protected static ?string $model = Unit::class;
+-
+-    protected static ?string $navigationIcon = 'heroicon-o-users';
+-    protected static ?string $navigationGroup = 'Master Data'; // Agar terpisah dari menu utama
+-
+-    public static function form(Form $form): Form
+-    {
+-        return $form
+-            ->schema([
+-                Forms\Components\TextInput::make('name')
+-                    ->required()
+-                    ->label('Nama Unit'),
+-                
+-                Forms\Components\Select::make('direktorat_id')
+-                    ->relationship('direktorat', 'name')
+-                    ->required()
+-                    ->createOptionForm([
+-                        Forms\Components\TextInput::make('name')->required(),
+-                    ]),
+-            ]);
+-    }
+-
+-    public static function table(Table $table): Table
+-    {
+-        return $table
+-            ->columns([
+-                Tables\Columns\TextColumn::make('name')
+-                    ->searchable()
+-                    ->sortable()
+-                    ->label('Unit'),
+-                
+-                Tables\Columns\TextColumn::make('direktorat.name')
+-                    ->searchable()
+-                    ->sortable()
+-                    ->badge()
+-                    ->color('info'),
+-                    
+-                Tables\Columns\TextColumn::make('sops_count')
+-                    ->counts('sops')
+-                    ->label('Jumlah SOP'),
+-            ])
+-            ->filters([
+-                Tables\Filters\SelectFilter::make('direktorat_id')
+-                    ->relationship('direktorat', 'name'),
+-            ])
+-            ->actions([
+-                Tables\Actions\EditAction::make(),
+-            ])
+-            ->bulkActions([
+-                Tables\Actions\BulkActionGroup::make([
+-                    Tables\Actions\DeleteBulkAction::make(),
+-                ]),
+-            ]);
+-    }
+-
+-    public static function getRelations(): array
+-    {
+-        return [];
+-    }
+-
+-    public static function getPages(): array
+-    {
+-        return [
+-            'index' => Pages\ListUnits::route('/'),
+-            'create' => Pages\CreateUnit::route('/create'),
+-            'edit' => Pages\EditUnit::route('/{record}/edit'),
+-        ];
+-    }
+-}
+\ No newline at end of file
+diff --git a/app/Filament/Resources/UnitResource/Pages/CreateUnit.php b/app/Filament/Resources/UnitResource/Pages/CreateUnit.php
+deleted file mode 100644
+index a384307..0000000
+--- a/app/Filament/Resources/UnitResource/Pages/CreateUnit.php
++++ /dev/null
+@@ -1,12 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UnitResource\Pages;
+-
+-use App\Filament\Resources\UnitResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\CreateRecord;
+-
+-class CreateUnit extends CreateRecord
+-{
+-    protected static string $resource = UnitResource::class;
+-}
+diff --git a/app/Filament/Resources/UnitResource/Pages/EditUnit.php b/app/Filament/Resources/UnitResource/Pages/EditUnit.php
+deleted file mode 100644
+index 45416e5..0000000
+--- a/app/Filament/Resources/UnitResource/Pages/EditUnit.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UnitResource\Pages;
+-
+-use App\Filament\Resources\UnitResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\EditRecord;
+-
+-class EditUnit extends EditRecord
+-{
+-    protected static string $resource = UnitResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\DeleteAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/UnitResource/Pages/ListUnits.php b/app/Filament/Resources/UnitResource/Pages/ListUnits.php
+deleted file mode 100644
+index 215f0ce..0000000
+--- a/app/Filament/Resources/UnitResource/Pages/ListUnits.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UnitResource\Pages;
+-
+-use App\Filament\Resources\UnitResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\ListRecords;
+-
+-class ListUnits extends ListRecords
+-{
+-    protected static string $resource = UnitResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\CreateAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/UserResource.php b/app/Filament/Resources/UserResource.php
+deleted file mode 100644
+index 10a6853..0000000
+--- a/app/Filament/Resources/UserResource.php
++++ /dev/null
+@@ -1,84 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources;
+-
+-use App\Filament\Resources\UserResource\Pages;
+-use App\Filament\Resources\UserResource\RelationManagers;
+-use App\Models\User;
+-use Filament\Forms;
+-use Filament\Forms\Form;
+-use Filament\Resources\Resource;
+-use Filament\Tables;
+-use Filament\Tables\Table;
+-use Illuminate\Database\Eloquent\Builder;
+-use Illuminate\Database\Eloquent\SoftDeletingScope;
+-
+-class UserResource extends Resource
+-{
+-    protected static ?string $model = User::class;
+-
+-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+-
+-    public static function form(Form $form): Form
+-    {
+-        return $form
+-             ->schema([
+-            Forms\Components\TextInput::make('name')
+-                ->required()
+-                ->maxLength(255),
+-
+-            Forms\Components\TextInput::make('email')
+-                ->email()
+-                ->required()
+-                ->maxLength(255),
+-
+-            Forms\Components\TextInput::make('password')
+-                ->password()
+-                ->required(fn ($livewire) => $livewire instanceof Pages\CreateUser)
+-                ->dehydrateStateUsing(fn ($state) => bcrypt($state))
+-                ->dehydrated(fn ($state) => filled($state)),
+-
+-            Forms\Components\Select::make('roles')
+-                ->label('Role')
+-                ->multiple()
+-                ->relationship('roles', 'name')
+-                ->preload()
+-                ->required(),
+-        ]);
+-    }
+-
+-    public static function table(Table $table): Table
+-    {
+-        return $table
+-            ->columns([
+-                //
+-            ])
+-            ->filters([
+-                //
+-            ])
+-            ->actions([
+-                Tables\Actions\EditAction::make(),
+-            ])
+-            ->bulkActions([
+-                Tables\Actions\BulkActionGroup::make([
+-                    Tables\Actions\DeleteBulkAction::make(),
+-                ]),
+-            ]);
+-    }
+-
+-    public static function getRelations(): array
+-    {
+-        return [
+-            //
+-        ];
+-    }
+-
+-    public static function getPages(): array
+-    {
+-        return [
+-            'index' => Pages\ListUsers::route('/'),
+-            'create' => Pages\CreateUser::route('/create'),
+-            'edit' => Pages\EditUser::route('/{record}/edit'),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/UserResource/Pages/CreateUser.php b/app/Filament/Resources/UserResource/Pages/CreateUser.php
+deleted file mode 100644
+index 73aa46d..0000000
+--- a/app/Filament/Resources/UserResource/Pages/CreateUser.php
++++ /dev/null
+@@ -1,12 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UserResource\Pages;
+-
+-use App\Filament\Resources\UserResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\CreateRecord;
+-
+-class CreateUser extends CreateRecord
+-{
+-    protected static string $resource = UserResource::class;
+-}
+diff --git a/app/Filament/Resources/UserResource/Pages/EditUser.php b/app/Filament/Resources/UserResource/Pages/EditUser.php
+deleted file mode 100644
+index b8770a9..0000000
+--- a/app/Filament/Resources/UserResource/Pages/EditUser.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UserResource\Pages;
+-
+-use App\Filament\Resources\UserResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\EditRecord;
+-
+-class EditUser extends EditRecord
+-{
+-    protected static string $resource = UserResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\DeleteAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Filament/Resources/UserResource/Pages/ListUsers.php b/app/Filament/Resources/UserResource/Pages/ListUsers.php
+deleted file mode 100644
+index 0766ffe..0000000
+--- a/app/Filament/Resources/UserResource/Pages/ListUsers.php
++++ /dev/null
+@@ -1,19 +0,0 @@
+-<?php
+-
+-namespace App\Filament\Resources\UserResource\Pages;
+-
+-use App\Filament\Resources\UserResource;
+-use Filament\Actions;
+-use Filament\Resources\Pages\ListRecords;
+-
+-class ListUsers extends ListRecords
+-{
+-    protected static string $resource = UserResource::class;
+-
+-    protected function getHeaderActions(): array
+-    {
+-        return [
+-            Actions\CreateAction::make(),
+-        ];
+-    }
+-}
+diff --git a/app/Models/Direktorat.php b/app/Models/Direktorat.php
+index ce11b97..9d7eac9 100644
+--- a/app/Models/Direktorat.php
++++ b/app/Models/Direktorat.php
+@@ -1,4 +1,5 @@
+ <?php
++
+ namespace App\Models;
+ 
+ use Illuminate\Database\Eloquent\Model;
+@@ -6,8 +7,7 @@
+ 
+ class Direktorat extends Model
+ {
+-    // Agar bisa diisi semua kolom (mass assignment)
+-    protected $guarded = [];
++    protected $fillable = ['nama'];
+ 
+     public function units(): HasMany
+     {
+diff --git a/app/Models/Sop.php b/app/Models/Sop.php
+index 7c59de4..9be1921 100644
+--- a/app/Models/Sop.php
++++ b/app/Models/Sop.php
+@@ -1,40 +1,40 @@
+ <?php
++
+ namespace App\Models;
+ 
+ use Illuminate\Database\Eloquent\Model;
+ use Illuminate\Database\Eloquent\Relations\BelongsTo;
+-use Illuminate\Database\Eloquent\Relations\HasMany;
++use Illuminate\Support\Facades\Auth; // [1] Tambahkan Import ini
+ 
+ class Sop extends Model
+ {
+     protected $guarded = [];
+ 
+-    // Cast tanggal agar otomatis jadi object Carbon (mudah diformat di Filament)
+     protected $casts = [
+         'tanggal_terbit' => 'date',
+         'tanggal_berlaku' => 'date',
+         'tanggal_kadaluarsa' => 'date',
+     ];
+ 
+-    public function unit(): BelongsTo
+-    {
+-        return $this->belongsTo(Unit::class);
+-    }
+-
+-    public function pengusul(): BelongsTo
++    // [2] TAMBAHKAN FUNGSI BOOTED INI
++    // Fungsi ini akan berjalan otomatis setiap kali SOP baru dibuat
++    protected static function booted(): void
+     {
+-        return $this->belongsTo(User::class, 'user_id');
++        static::creating(function (Sop $sop) {
++            // Jika user_id kosong, isi otomatis dengan ID user yang sedang login
++            if (empty($sop->user_id) && Auth::check()) {
++                $sop->user_id = Auth::id();
++            }
++        });
+     }
+ 
+-    // Relasi untuk melihat versi sebelumnya (Parent)
+-    public function parent(): BelongsTo
++    public function unit(): BelongsTo
+     {
+-        return $this->belongsTo(Sop::class, 'parent_id');
++        return $this->belongsTo(Unit::class);
+     }
+ 
+-    // Relasi untuk melihat revisi-revisi (Children)
+-    public function children(): HasMany
++    public function user(): BelongsTo
+     {
+-        return $this->hasMany(Sop::class, 'parent_id');
++        return $this->belongsTo(User::class);
+     }
+ }
+\ No newline at end of file
+diff --git a/app/Models/Unit.php b/app/Models/Unit.php
+index 985fc33..914609a 100644
+--- a/app/Models/Unit.php
++++ b/app/Models/Unit.php
+@@ -1,4 +1,5 @@
+ <?php
++
+ namespace App\Models;
+ 
+ use Illuminate\Database\Eloquent\Model;
+@@ -7,7 +8,7 @@
+ 
+ class Unit extends Model
+ {
+-    protected $guarded = [];
++    protected $fillable = ['nama', 'direktorat_id']; // Pastikan ada direktorat_id di tabel units
+ 
+     public function direktorat(): BelongsTo
+     {
+@@ -18,9 +19,16 @@ public function sops(): HasMany
+     {
+         return $this->hasMany(Sop::class);
+     }
+-    
+-    public function users(): HasMany
++
++    // Relasi khusus untuk menghitung jenis 'SOP'
++    public function sops_murni(): HasMany
++    {
++        return $this->hasMany(Sop::class)->where('jenis', 'SOP');
++    }
++
++    // Relasi khusus untuk menghitung jenis 'SOP AP'
++    public function sop_aps(): HasMany
+     {
+-        return $this->hasMany(User::class);
++        return $this->hasMany(Sop::class)->where('jenis', 'SOP AP');
+     }
+ }
+\ No newline at end of file
+diff --git a/app/Models/User.php b/app/Models/User.php
+index 2312cfe..fcd0da6 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -2,60 +2,56 @@
+ 
+ namespace App\Models;
+ 
+-// use Illuminate\Contracts\Auth\MustVerifyEmail;
++use Filament\Models\Contracts\FilamentUser;
++use Filament\Panel;
+ use Illuminate\Database\Eloquent\Factories\HasFactory;
+-use Illuminate\Database\Eloquent\Relations\BelongsTo; // [1] Tambahkan Import ini
++use Illuminate\Database\Eloquent\Relations\BelongsTo;
+ use Illuminate\Foundation\Auth\User as Authenticatable;
+-use Illuminate\Notifications\Notifiable;
++use Illuminate\Notifications\Notifiable; // [1] Wajib Ada
+ use Laravel\Sanctum\HasApiTokens;
+ use Spatie\Permission\Traits\HasRoles;
+ 
+-class User extends Authenticatable
++class User extends Authenticatable implements FilamentUser
+ {
++    // [2] Tambahkan Notifiable di sini
+     use HasApiTokens, HasFactory, Notifiable, HasRoles;
+ 
+-    /**
+-     * The attributes that are mass assignable.
+-     *
+-     * @var array<int, string>
+-     */
+     protected $fillable = [
+         'name',
+         'email',
+         'password',
+-        'unit_id',   // [2] Tambahkan ini agar bisa diisi (Mass Assignment)
+-        'is_active', // [3] Tambahkan ini agar bisa diisi
++        'unit_id',
++        'is_active',
+     ];
+ 
+-    /**
+-     * The attributes that should be hidden for serialization.
+-     *
+-     * @var array<int, string>
+-     */
+     protected $hidden = [
+         'password',
+         'remember_token',
+     ];
+ 
+-    /**
+-     * The attributes that should be cast.
+-     *
+-     * @var array<string, string>
+-     */
+     protected $casts = [
+         'email_verified_at' => 'datetime',
+         'password' => 'hashed',
+-        'is_active' => 'boolean', // [4] Opsional: Cast agar otomatis jadi true/false
++        'is_active' => 'boolean',
+     ];
+ 
+-    // [5] Definisi Relasi ke Unit
+     public function unit(): BelongsTo
+     {
+         return $this->belongsTo(Unit::class);
+     }
+ 
+-    public function canAccessFilament(): bool
++    public function canAccessPanel(Panel $panel): bool
+     {
+-        return $this->hasRole('super_admin');
++        if (! $this->is_active) {
++            return false;
++        }
++
++        return match ($panel->getId()) {
++            'admin'       => $this->hasRole('admin'),
++            'pengusul'    => $this->hasRole('pengusul'),
++            'verifikator' => $this->hasRole('verifikator'),
++            'pegawai'     => $this->hasRole('pegawai'),
++            default       => false,
++        };
+     }
+ }
+\ No newline at end of file
+diff --git a/app/Policies/SopPolicy.php b/app/Policies/SopPolicy.php
+index 7e7e4cc..6a5cfa1 100644
+--- a/app/Policies/SopPolicy.php
++++ b/app/Policies/SopPolicy.php
+@@ -2,150 +2,82 @@
+ 
+ namespace App\Policies;
+ 
+-use App\Models\User;
+ use App\Models\Sop;
+-use Illuminate\Auth\Access\HandlesAuthorization;
++use App\Models\User;
++use Illuminate\Auth\Access\Response;
+ 
+ class SopPolicy
+ {
+-    use HandlesAuthorization;
+-
+     /**
+      * Determine whether the user can view any models.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+      */
+     public function viewAny(User $user): bool
+     {
+-        return $user->can('view_any_sop');
++        return true;
+     }
+ 
+     /**
+      * Determine whether the user can view the model.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+      */
+     public function view(User $user, Sop $sop): bool
+     {
+-        return $user->can('view_sop');
++        // Admin & Verifikator boleh MELIHAT semua
++        if ($user->hasRole(['admin', 'verifikator'])) return true;
++        
++        // Pengusul/User lain hanya boleh lihat milik unitnya sendiri
++        return $user->unit_id === $sop->unit_id;
+     }
+ 
+     /**
+      * Determine whether the user can create models.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+      */
+     public function create(User $user): bool
+     {
+-        return $user->can('create_sop');
++        // Biasanya hanya pengusul yang membuat
++        return $user->hasRole('pengusul');
+     }
+ 
+     /**
+      * Determine whether the user can update the model.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+      */
+     public function update(User $user, Sop $sop): bool
+     {
+-        return $user->can('update_sop');
++        // [PERUBAHAN UTAMA]
++        // Kita HAPUS blok "if admin return true".
++        // Sekarang Admin pun TIDAK BISA edit konten SOP.
++
++        // 1. Pastikan user adalah PENGUSUL
++        if (! $user->hasRole('pengusul')) {
++            return false;
++        }
++
++        // 2. Pastikan SOP ini milik unit si Pengusul
++        if ($user->unit_id !== $sop->unit_id) {
++            return false;
++        }
++
++        // 3. Hanya status tertentu yang boleh diedit
++        // - Draft: Edit biasa
++        // - Ditolak: Edit revisi
++        // - Disetujui: Edit untuk mengajukan perubahan (Re-submission)
++        return in_array($sop->status, ['Draft', 'Ditolak', 'Disetujui']);
+     }
+ 
+     /**
+      * Determine whether the user can delete the model.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+      */
+     public function delete(User $user, Sop $sop): bool
+     {
+-        return $user->can('delete_sop');
+-    }
++        // Admin boleh delete jika terpaksa (opsional, bisa dihapus jika ingin strict)
++        if ($user->hasRole('admin')) {
++            return true;
++        }
+ 
+-    /**
+-     * Determine whether the user can bulk delete.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+-     */
+-    public function deleteAny(User $user): bool
+-    {
+-        return $user->can('delete_any_sop');
+-    }
++        // Pengusul hanya boleh hapus Draft atau Ditolak
++        if ($user->hasRole('pengusul') && $user->unit_id === $sop->unit_id) {
++            return in_array($sop->status, ['Draft', 'Ditolak']);
++        }
+ 
+-    /**
+-     * Determine whether the user can permanently delete.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+-     */
+-    public function forceDelete(User $user, Sop $sop): bool
+-    {
+-        return $user->can('force_delete_sop');
++        return false;
+     }
+-
+-    /**
+-     * Determine whether the user can permanently bulk delete.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+-     */
+-    public function forceDeleteAny(User $user): bool
+-    {
+-        return $user->can('force_delete_any_sop');
+-    }
+-
+-    /**
+-     * Determine whether the user can restore.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+-     */
+-    public function restore(User $user, Sop $sop): bool
+-    {
+-        return $user->can('restore_sop');
+-    }
+-
+-    /**
+-     * Determine whether the user can bulk restore.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+-     */
+-    public function restoreAny(User $user): bool
+-    {
+-        return $user->can('restore_any_sop');
+-    }
+-
+-    /**
+-     * Determine whether the user can replicate.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @param  \App\Models\Sop  $sop
+-     * @return bool
+-     */
+-    public function replicate(User $user, Sop $sop): bool
+-    {
+-        return $user->can('replicate_sop');
+-    }
+-
+-    /**
+-     * Determine whether the user can reorder.
+-     *
+-     * @param  \App\Models\User  $user
+-     * @return bool
+-     */
+-    public function reorder(User $user): bool
+-    {
+-        return $user->can('reorder_sop');
+-    }
+-
+-}
++}
+\ No newline at end of file
+diff --git a/app/Policies/UserPolicy.php b/app/Policies/UserPolicy.php
+index 68e101e..5c51e77 100644
+--- a/app/Policies/UserPolicy.php
++++ b/app/Policies/UserPolicy.php
+@@ -3,7 +3,6 @@
+ namespace App\Policies;
+ 
+ use App\Models\User;
+-
+ use Illuminate\Auth\Access\HandlesAuthorization;
+ 
+ class UserPolicy
+@@ -25,9 +24,10 @@ public function viewAny(User $user): bool
+      * Determine whether the user can view the model.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function view(User $user): bool
++    public function view(User $user, User $model): bool
+     {
+         return $user->can('view_user');
+     }
+@@ -47,9 +47,10 @@ public function create(User $user): bool
+      * Determine whether the user can update the model.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function update(User $user): bool
++    public function update(User $user, User $model): bool
+     {
+         return $user->can('update_user');
+     }
+@@ -58,9 +59,10 @@ public function update(User $user): bool
+      * Determine whether the user can delete the model.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function delete(User $user): bool
++    public function delete(User $user, User $model): bool
+     {
+         return $user->can('delete_user');
+     }
+@@ -80,9 +82,10 @@ public function deleteAny(User $user): bool
+      * Determine whether the user can permanently delete.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function forceDelete(User $user): bool
++    public function forceDelete(User $user, User $model): bool
+     {
+         return $user->can('force_delete_user');
+     }
+@@ -102,9 +105,10 @@ public function forceDeleteAny(User $user): bool
+      * Determine whether the user can restore.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function restore(User $user): bool
++    public function restore(User $user, User $model): bool
+     {
+         return $user->can('restore_user');
+     }
+@@ -121,12 +125,13 @@ public function restoreAny(User $user): bool
+     }
+ 
+     /**
+-     * Determine whether the user can bulk restore.
++     * Determine whether the user can replicate.
+      *
+      * @param  \App\Models\User  $user
++     * @param  \App\Models\User  $model
+      * @return bool
+      */
+-    public function replicate(User $user): bool
++    public function replicate(User $user, User $model): bool
+     {
+         return $user->can('replicate_user');
+     }
+@@ -141,4 +146,4 @@ public function reorder(User $user): bool
+     {
+         return $user->can('reorder_user');
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/app/Providers/AppServiceProvider.php b/app/Providers/AppServiceProvider.php
+index 452e6b6..74eca36 100644
+--- a/app/Providers/AppServiceProvider.php
++++ b/app/Providers/AppServiceProvider.php
+@@ -6,19 +6,14 @@
+ 
+ class AppServiceProvider extends ServiceProvider
+ {
+-    /**
+-     * Register any application services.
+-     */
+     public function register(): void
+     {
+         //
+     }
+ 
+-    /**
+-     * Bootstrap any application services.
+-     */
+     public function boot(): void
+     {
+-        //
++        // Kode konfigurasi polling dihapus karena menyebabkan error pada versi ini.
++        // Filament akan menggunakan polling default (30 detik).
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/app/Providers/Filament/AdminPanelProvider.php b/app/Providers/Filament/AdminPanelProvider.php
+index b33219c..eb7afe3 100644
+--- a/app/Providers/Filament/AdminPanelProvider.php
++++ b/app/Providers/Filament/AdminPanelProvider.php
+@@ -2,7 +2,6 @@
+ 
+ namespace App\Providers\Filament;
+ 
+-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+ use Filament\Http\Middleware\Authenticate;
+ use Filament\Http\Middleware\DisableBladeIconComponents;
+ use Filament\Http\Middleware\DispatchServingFilamentEvent;
+@@ -11,6 +10,7 @@
+ use Filament\PanelProvider;
+ use Filament\Support\Colors\Color;
+ use Filament\Widgets;
++use Filament\View\PanelsRenderHook; // Import Render Hook
+ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+ use Illuminate\Cookie\Middleware\EncryptCookies;
+ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+@@ -18,6 +18,7 @@
+ use Illuminate\Session\Middleware\AuthenticateSession;
+ use Illuminate\Session\Middleware\StartSession;
+ use Illuminate\View\Middleware\ShareErrorsFromSession;
++use Illuminate\Support\Facades\Blade; // Import Blade
+ 
+ class AdminPanelProvider extends PanelProvider
+ {
+@@ -29,17 +30,48 @@ public function panel(Panel $panel): Panel
+             ->path('admin')
+             ->login()
+             ->authGuard('web')
+-    
+-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
++            
++            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
++            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
++            ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
++            
+             ->pages([
+                 Pages\Dashboard::class,
+             ])
+-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+-            ->widgets([
+-                Widgets\AccountWidget::class,
+-                Widgets\FilamentInfoWidget::class,
+-            ])
++            ->brandLogo(asset('images/logosop.png'))
++            ->brandLogoHeight('2.5rem')
++            
++            // [1] Hapus Widget Bawaan (Kotak Selamat Datang/Info)
++            ->widgets([]) 
++
++            // [2] Tambahkan Profil di Kiri Bawah
++            ->renderHook(
++                'panels::sidebar.footer',
++                fn () => view('filament.components.sidebar-profile')
++            )
++
++             // [3] PERBAIKAN CSS: Hanya sembunyikan User Menu, BIARKAN Theme Switcher
++             ->renderHook(
++                'panels::head.end',
++                fn () => Blade::render('<style>
++                    /* 1. Sembunyikan Menu User (Avatar & Nama) di Kanan Atas */
++                    .fi-topbar-item.fi-user-menu { 
++                        display: none !important; 
++                    }
++
++                    /* 2. Pastikan Theme Switcher TETAP MUNCUL */
++                    .fi-topbar-item.fi-theme-switcher { 
++                        display: flex !important;
++                        visibility: visible !important;
++                    }
++                    
++                    /* Tambahan: Jika tombol notifikasi ikut hilang, tambahkan ini */
++                    .fi-topbar-item {
++                        display: flex; /* Defaultnya flex, jangan di-none-kan global */
++                    }
++                </style>')
++            )
++            
+             ->middleware([
+                 EncryptCookies::class,
+                 AddQueuedCookiesToResponse::class,
+@@ -55,4 +87,4 @@ public function panel(Panel $panel): Panel
+                 Authenticate::class,
+             ]);
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/composer.json b/composer.json
+index 7e9f42d..12347ff 100644
+--- a/composer.json
++++ b/composer.json
+@@ -11,10 +11,12 @@
+         "php": "^8.1",
+         "bezhansalleh/filament-shield": "3.0",
+         "filament/filament": "3.2",
++        "flowframe/laravel-trend": "^0.4.0",
+         "guzzlehttp/guzzle": "^7.2",
+         "laravel/framework": "^10.10",
+         "laravel/sanctum": "^3.3",
+         "laravel/tinker": "^2.8",
++        "pusher/pusher-php-server": "^7.2",
+         "spatie/laravel-permission": "5.11"
+     },
+     "require-dev": {
+diff --git a/composer.lock b/composer.lock
+index 425d7e7..f5367d6 100644
+--- a/composer.lock
++++ b/composer.lock
+@@ -4,7 +4,7 @@
+         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+         "This file is @generated automatically"
+     ],
+-    "content-hash": "3808763bc774541397a8edec52dcade0",
++    "content-hash": "c20e18a5d0ba74bf2f50f1b32396df24",
+     "packages": [
+         {
+             "name": "anourvalar/eloquent-serialize",
+@@ -1598,6 +1598,80 @@
+             },
+             "time": "2024-01-02T23:08:01+00:00"
+         },
++        {
++            "name": "flowframe/laravel-trend",
++            "version": "v0.4.0",
++            "source": {
++                "type": "git",
++                "url": "https://github.com/Flowframe/laravel-trend.git",
++                "reference": "5ace11d3075932652dc48963faa732c043aeb14d"
++            },
++            "dist": {
++                "type": "zip",
++                "url": "https://api.github.com/repos/Flowframe/laravel-trend/zipball/5ace11d3075932652dc48963faa732c043aeb14d",
++                "reference": "5ace11d3075932652dc48963faa732c043aeb14d",
++                "shasum": ""
++            },
++            "require": {
++                "illuminate/contracts": "^8.37|^9|^10.0|^11.0|^12.0",
++                "php": "^8.2",
++                "spatie/laravel-package-tools": "^1.4.3"
++            },
++            "require-dev": {
++                "nunomaduro/collision": "^5.3|^6.1|^8.0",
++                "orchestra/testbench": "^6.15|^7.0|^8.0|^9.0|^10.0",
++                "pestphp/pest": "^1.18|^2.34|^3.7",
++                "pestphp/pest-plugin-laravel": "^1.1|^2.3|^3.1",
++                "spatie/laravel-ray": "^1.23",
++                "vimeo/psalm": "^4.8|^5.6|^6.5"
++            },
++            "type": "library",
++            "extra": {
++                "laravel": {
++                    "aliases": {
++                        "Trend": "Flowframe\\Trend\\TrendFacade"
++                    },
++                    "providers": [
++                        "Flowframe\\Trend\\TrendServiceProvider"
++                    ]
++                }
++            },
++            "autoload": {
++                "psr-4": {
++                    "Flowframe\\Trend\\": "src",
++                    "Flowframe\\Trend\\Database\\Factories\\": "database/factories"
++                }
++            },
++            "notification-url": "https://packagist.org/downloads/",
++            "license": [
++                "MIT"
++            ],
++            "authors": [
++                {
++                    "name": "Lars Klopstra",
++                    "email": "lars@flowframe.nl",
++                    "role": "Developer"
++                }
++            ],
++            "description": "Easily generate model trends",
++            "homepage": "https://github.com/flowframe/laravel-trend",
++            "keywords": [
++                "Flowframe",
++                "laravel",
++                "laravel-trend"
++            ],
++            "support": {
++                "issues": "https://github.com/Flowframe/laravel-trend/issues",
++                "source": "https://github.com/Flowframe/laravel-trend/tree/v0.4.0"
++            },
++            "funding": [
++                {
++                    "url": "https://github.com/larsklopstra",
++                    "type": "github"
++                }
++            ],
++            "time": "2025-02-25T11:13:23+00:00"
++        },
+         {
+             "name": "fruitcake/php-cors",
+             "version": "v1.3.0",
+@@ -4053,6 +4127,102 @@
+             ],
+             "time": "2025-09-03T16:03:54+00:00"
+         },
++        {
++            "name": "paragonie/sodium_compat",
++            "version": "v2.4.0",
++            "source": {
++                "type": "git",
++                "url": "https://github.com/paragonie/sodium_compat.git",
++                "reference": "547e2dc4d45107440e76c17ab5a46e4252460158"
++            },
++            "dist": {
++                "type": "zip",
++                "url": "https://api.github.com/repos/paragonie/sodium_compat/zipball/547e2dc4d45107440e76c17ab5a46e4252460158",
++                "reference": "547e2dc4d45107440e76c17ab5a46e4252460158",
++                "shasum": ""
++            },
++            "require": {
++                "php": "^8.1",
++                "php-64bit": "*"
++            },
++            "require-dev": {
++                "infection/infection": "^0",
++                "nikic/php-fuzzer": "^0",
++                "phpunit/phpunit": "^7|^8|^9|^10|^11",
++                "vimeo/psalm": "^4|^5|^6"
++            },
++            "suggest": {
++                "ext-sodium": "Better performance, password hashing (Argon2i), secure memory management (memzero), and better security."
++            },
++            "type": "library",
++            "extra": {
++                "branch-alias": {
++                    "dev-master": "2.0.x-dev"
++                }
++            },
++            "autoload": {
++                "files": [
++                    "autoload.php"
++                ],
++                "psr-4": {
++                    "ParagonIE\\Sodium\\": "namespaced/"
++                }
++            },
++            "notification-url": "https://packagist.org/downloads/",
++            "license": [
++                "ISC"
++            ],
++            "authors": [
++                {
++                    "name": "Paragon Initiative Enterprises",
++                    "email": "security@paragonie.com"
++                },
++                {
++                    "name": "Frank Denis",
++                    "email": "jedisct1@pureftpd.org"
++                }
++            ],
++            "description": "Pure PHP implementation of libsodium; uses the PHP extension if it exists",
++            "keywords": [
++                "Authentication",
++                "BLAKE2b",
++                "ChaCha20",
++                "ChaCha20-Poly1305",
++                "Chapoly",
++                "Curve25519",
++                "Ed25519",
++                "EdDSA",
++                "Edwards-curve Digital Signature Algorithm",
++                "Elliptic Curve Diffie-Hellman",
++                "Poly1305",
++                "Pure-PHP cryptography",
++                "RFC 7748",
++                "RFC 8032",
++                "Salpoly",
++                "Salsa20",
++                "X25519",
++                "XChaCha20-Poly1305",
++                "XSalsa20-Poly1305",
++                "Xchacha20",
++                "Xsalsa20",
++                "aead",
++                "cryptography",
++                "ecdh",
++                "elliptic curve",
++                "elliptic curve cryptography",
++                "encryption",
++                "libsodium",
++                "php",
++                "public-key cryptography",
++                "secret-key cryptography",
++                "side-channel resistant"
++            ],
++            "support": {
++                "issues": "https://github.com/paragonie/sodium_compat/issues",
++                "source": "https://github.com/paragonie/sodium_compat/tree/v2.4.0"
++            },
++            "time": "2025-10-06T08:47:40+00:00"
++        },
+         {
+             "name": "phpoption/phpoption",
+             "version": "1.9.4",
+@@ -4668,6 +4838,67 @@
+             },
+             "time": "2025-11-28T00:00:14+00:00"
+         },
++        {
++            "name": "pusher/pusher-php-server",
++            "version": "7.2.7",
++            "source": {
++                "type": "git",
++                "url": "https://github.com/pusher/pusher-http-php.git",
++                "reference": "148b0b5100d000ed57195acdf548a2b1b38ee3f7"
++            },
++            "dist": {
++                "type": "zip",
++                "url": "https://api.github.com/repos/pusher/pusher-http-php/zipball/148b0b5100d000ed57195acdf548a2b1b38ee3f7",
++                "reference": "148b0b5100d000ed57195acdf548a2b1b38ee3f7",
++                "shasum": ""
++            },
++            "require": {
++                "ext-curl": "*",
++                "ext-json": "*",
++                "guzzlehttp/guzzle": "^7.2",
++                "paragonie/sodium_compat": "^1.6|^2.0",
++                "php": "^7.3|^8.0",
++                "psr/log": "^1.0|^2.0|^3.0"
++            },
++            "require-dev": {
++                "overtrue/phplint": "^2.3",
++                "phpunit/phpunit": "^9.3"
++            },
++            "type": "library",
++            "extra": {
++                "branch-alias": {
++                    "dev-master": "5.0-dev"
++                }
++            },
++            "autoload": {
++                "psr-4": {
++                    "Pusher\\": "src/"
++                }
++            },
++            "notification-url": "https://packagist.org/downloads/",
++            "license": [
++                "MIT"
++            ],
++            "description": "Library for interacting with the Pusher REST API",
++            "keywords": [
++                "events",
++                "messaging",
++                "php-pusher-server",
++                "publish",
++                "push",
++                "pusher",
++                "real time",
++                "real-time",
++                "realtime",
++                "rest",
++                "trigger"
++            ],
++            "support": {
++                "issues": "https://github.com/pusher/pusher-http-php/issues",
++                "source": "https://github.com/pusher/pusher-http-php/tree/7.2.7"
++            },
++            "time": "2025-01-06T10:56:20+00:00"
++        },
+         {
+             "name": "ralouphie/getallheaders",
+             "version": "3.0.3",
+diff --git a/config/app.php b/config/app.php
+index 0729885..8b4fee3 100644
+--- a/config/app.php
++++ b/config/app.php
+@@ -165,9 +165,15 @@
+          */
+         App\Providers\AppServiceProvider::class,
+         App\Providers\AuthServiceProvider::class,
+-        // App\Providers\BroadcastServiceProvider::class,
++        App\Providers\BroadcastServiceProvider::class,
+         App\Providers\EventServiceProvider::class,
++        
++        // Filament Panels (Admin, Pengusul, Verifikator, Pegawai)
+         App\Providers\Filament\AdminPanelProvider::class,
++        App\Providers\Filament\PengusulPanelProvider::class,
++        App\Providers\Filament\VerifikatorPanelProvider::class,
++        App\Providers\Filament\PegawaiPanelProvider::class,
++        
+         App\Providers\RouteServiceProvider::class,
+     ])->toArray(),
+ 
+@@ -186,4 +192,4 @@
+         // 'Example' => App\Facades\Example::class,
+     ])->toArray(),
+ 
+-];
++];
+\ No newline at end of file
+diff --git a/database/seeders/DatabaseSeeder.php b/database/seeders/DatabaseSeeder.php
+index a9f4519..ea29c5c 100644
+--- a/database/seeders/DatabaseSeeder.php
++++ b/database/seeders/DatabaseSeeder.php
+@@ -2,21 +2,67 @@
+ 
+ namespace Database\Seeders;
+ 
+-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
++use App\Models\User;
++use App\Models\Unit;
++use App\Models\Direktorat;
+ use Illuminate\Database\Seeder;
+ 
+ class DatabaseSeeder extends Seeder
+ {
+-    /**
+-     * Seed the application's database.
+-     */
+     public function run(): void
+     {
+-        // \App\Models\User::factory(10)->create();
++        // 1. Panggil Seeder Role & Permission dulu
++        // Pastikan file RolesAndPermissionsSeeder sudah ada dan membuat role: admin, verifikator, pengusul, pegawai
++        $this->call(RolesAndPermissionsSeeder::class);
+ 
+-        // \App\Models\User::factory()->create([
+-        //     'name' => 'Test User',
+-        //     'email' => 'test@example.com',
+-        // ]);
++        // 2. Buat Data Master Dummy
++        $dirMedis = Direktorat::create(['nama' => 'Direktorat Pelayanan Medis']);
++        $dirUmum = Direktorat::create(['nama' => 'Direktorat Umum & Operasional']);
++
++        $unitIGD = Unit::create(['nama' => 'Instalasi Gawat Darurat', 'direktorat_id' => $dirMedis->id]);
++        $unitHumas = Unit::create(['nama' => 'Humas & Protokoler', 'direktorat_id' => $dirUmum->id]);
++
++        // 3. Buat User untuk Testing
++        // PERBAIKAN: Hapus bcrypt(), gunakan string biasa 'password' karena Model User sudah auto-hash.
++
++        // A. Admin (Login di /admin/login)
++        $admin = User::factory()->create([
++            'name' => 'Administrator',
++            'email' => 'admin@sopan.com',
++            'password' => 'password', // <--- JANGAN PAKAI BCRYPT
++            'is_active' => true,
++            'unit_id' => null,
++        ]);
++        $admin->assignRole('admin');
++
++        // B. Verifikator (Login di /verifikator/login)
++        $verifikator = User::factory()->create([
++            'name' => 'Staff Humas',
++            'email' => 'verifikator@sopan.com',
++            'password' => 'password', // <--- JANGAN PAKAI BCRYPT
++            'unit_id' => $unitHumas->id,
++            'is_active' => true,
++        ]);
++        $verifikator->assignRole('verifikator');
++
++        // C. Pengusul (Login di /pengusul/login)
++        $pengusul = User::factory()->create([
++            'name' => 'Kepala IGD',
++            'email' => 'pengusul@sopan.com',
++            'password' => 'password', // <--- JANGAN PAKAI BCRYPT
++            'unit_id' => $unitIGD->id,
++            'is_active' => true,
++        ]);
++        $pengusul->assignRole('pengusul');
++
++        // D. Pegawai (Login di /pegawai/login)
++        $pegawai = User::factory()->create([
++            'name' => 'Staff Biasa',
++            'email' => 'pegawai@sopan.com',
++            'password' => 'password', // <--- JANGAN PAKAI BCRYPT
++            'unit_id' => $unitIGD->id,
++            'is_active' => true,
++        ]);
++        $pegawai->assignRole('pegawai');
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/database/seeders/RolesAndPermissionsSeeder.php b/database/seeders/RolesAndPermissionsSeeder.php
+index 8f86fcb..3a41f18 100644
+--- a/database/seeders/RolesAndPermissionsSeeder.php
++++ b/database/seeders/RolesAndPermissionsSeeder.php
+@@ -6,78 +6,96 @@
+ use Spatie\Permission\Models\Role;
+ use Spatie\Permission\Models\Permission;
+ use Spatie\Permission\PermissionRegistrar;
+-use BezhanSalleh\FilamentShield\Support\Utils;
+ 
+ class RolesAndPermissionsSeeder extends Seeder
+ {
+     public function run(): void
+     {
+-        // Reset permission cache
++        // 1. Reset permission cache
+         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+ 
+-        /**
+-         * Ô£à Daftar Role SOP RS
+-         */
++        // 2. Daftar 4 Role Sesuai PDF SOPan
+         $roles = [
+-            'super_admin',
+-            'admin',
+-            'verifikator',
+-            'pengusul',
+-            'pegawai',
++            'admin',       // Mengelola User & Master Data
++            'verifikator', // Humas (Approve/Reject)
++            'pengusul',    // Kepala Unit (Upload)
++            'pegawai'      // Staff (View Only)
+         ];
+ 
+         foreach ($roles as $role) {
+-            Role::firstOrCreate([
+-                'name' => $role,
+-                'guard_name' => 'web',
+-            ]);
++            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+         }
+ 
+-        /**
+-         * Ô£à Generate otomatis permission Filament
+-         */
+-        $permissions = Utils::getPermissionModels();
++        // 3. GENERATE PERMISSION SECARA OTOMATIS
++        $entities = ['user', 'unit', 'direktorat', 'sop'];
++        $actions = [
++            'view_any',    // Lihat daftar
++            'view',        // Lihat detail
++            'create',      // Buat
++            'update',      // Edit
++            'delete',      // Hapus
++            'restore',     // Restore (Soft Delete)
++            'force_delete' // Hapus Permanen
++        ];
++
++        // Loop permission CRUD standar
++        foreach ($entities as $entity) {
++            foreach ($actions as $action) {
++                Permission::firstOrCreate([
++                    'name' => "{$action}_{$entity}", 
++                    'guard_name' => 'web'
++                ]);
++            }
++        }
++
++        // 4. Tambahkan Permission KHUSUS (Custom Workflow)
++        $customPermissions = [
++            'approve_sop',
++            'reject_sop'
++        ];
+ 
+-        foreach ($permissions as $permission) {
+-            Permission::firstOrCreate([
+-                'name' => $permission,
+-                'guard_name' => 'web',
+-            ]);
++        foreach ($customPermissions as $p) {
++            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
+         }
+ 
+-        /**
+-         * Ô£à Hak Akses
+-         */
+-        $superAdmin = Role::where('name', 'super_admin')->first();
+-        $admin      = Role::where('name', 'admin')->first();
+-        $verifikator= Role::where('name', 'verifikator')->first();
+-        $pengusul   = Role::where('name', 'pengusul')->first();
++        // --- 5. ASSIGNMENT PERMISSION KE ROLE ---
+ 
+-        // Super Admin ÔåÆ semua akses
+-        $superAdmin->syncPermissions(Permission::all());
++        // A. ADMIN (Sekarang jadi Role Tertinggi)
++        // Admin mengelola User, Unit, Direktorat, dan Bisa Melihat SOP
++        Role::where('name', 'admin')->first()->givePermissionTo([
++            // User Management (Full)
++            'view_any_user', 'view_user', 'create_user', 'update_user', 'delete_user',
++            // Unit Management (Full)
++            'view_any_unit', 'view_unit', 'create_unit', 'update_unit', 'delete_unit',
++            // Direktorat Management (Full)
++            'view_any_direktorat', 'view_direktorat', 'create_direktorat', 'update_direktorat', 'delete_direktorat',
++            // SOP (Hanya Lihat, Admin tidak ikut workflow approval)
++            'view_any_sop', 'view_sop'
++        ]);
+ 
+-        // Admin ÔåÆ semua kecuali delete user
+-        $admin->syncPermissions(
+-            Permission::whereNotIn('name', [
+-                'delete_user',
+-            ])->get()
+-        );
++        // B. VERIFIKATOR (Humas - Approve/Reject)
++        Role::where('name', 'verifikator')->first()->givePermissionTo([
++            // SOP Workflow
++            'view_any_sop', 'view_sop', 
++            'update_sop', // Perlu update untuk mengubah status
++            'approve_sop', 'reject_sop', // Tombol khusus
++            // Master Data (Read Only - untuk referensi)
++            'view_any_unit', 'view_unit',
++            'view_any_direktorat', 'view_direktorat'
++        ]);
+ 
+-        // Verifikator ÔåÆ view + update SOP
+-        $verifikator->syncPermissions(
+-            Permission::whereIn('name', [
+-                'view_sop',
+-                'update_sop',
+-                'approve_sop',
+-            ])->get()
+-        );
++        // C. PENGUSUL (Kepala Unit - Upload)
++        Role::where('name', 'pengusul')->first()->givePermissionTo([
++            // SOP Management
++            'view_any_sop', 'view_sop', 'create_sop', 
++            'update_sop', 'delete_sop', // Dibatasi policy hanya untuk draft sendiri
++            // Master Data (Read Only - untuk dropdown form)
++            'view_any_unit', 'view_unit'
++        ]);
+ 
+-        // Pengusul ÔåÆ create & view SOP
+-        $pengusul->syncPermissions(
+-            Permission::whereIn('name', [
+-                'create_sop',
+-                'view_sop',
+-            ])->get()
+-        );
++        // D. PEGAWAI (View Only)
++        Role::where('name', 'pegawai')->first()->givePermissionTo([
++            'view_any_sop', 'view_sop'
++        ]);
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index 56f5ddc..1a40d04 100644
+--- a/package.json
++++ b/package.json
+@@ -7,7 +7,11 @@
+     },
+     "devDependencies": {
+         "axios": "^1.6.4",
+-        "laravel-vite-plugin": "^1.0.0",
+-        "vite": "^5.0.0"
++        "laravel-vite-plugin": "^1.3.0",
++        "vite": "^6.0.0"
++    },
++    "dependencies": {
++        "laravel-echo": "^2.2.6",
++        "pusher-js": "^8.4.0"
+     }
+ }
+diff --git a/resources/js/bootstrap.js b/resources/js/bootstrap.js
+index 846d350..62861c9 100644
+--- a/resources/js/bootstrap.js
++++ b/resources/js/bootstrap.js
+@@ -15,18 +15,18 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+  * allows your team to easily build robust real-time web applications.
+  */
+ 
+-// import Echo from 'laravel-echo';
++import Echo from 'laravel-echo';
+ 
+-// import Pusher from 'pusher-js';
+-// window.Pusher = Pusher;
++import Pusher from 'pusher-js';
++window.Pusher = Pusher;
+ 
+-// window.Echo = new Echo({
+-//     broadcaster: 'pusher',
+-//     key: import.meta.env.VITE_PUSHER_APP_KEY,
+-//     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
+-//     wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
+-//     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
+-//     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
+-//     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+-//     enabledTransports: ['ws', 'wss'],
+-// });
++window.Echo = new Echo({
++    broadcaster: 'pusher',
++    key: import.meta.env.VITE_PUSHER_APP_KEY,
++    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
++    wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
++    wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
++    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
++    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
++    enabledTransports: ['ws', 'wss'],
++});
+diff --git a/routes/web.php b/routes/web.php
+index d259f33..ae8fb94 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -1,18 +1,13 @@
+ <?php
+ 
+ use Illuminate\Support\Facades\Route;
++use App\Http\Controllers\PublicSopController;
+ 
+-/*
+-|--------------------------------------------------------------------------
+-| Web Routes
+-|--------------------------------------------------------------------------
+-|
+-| Here is where you can register web routes for your application. These
+-| routes are loaded by the RouteServiceProvider and all of them will
+-| be assigned to the "web" middleware group. Make something great!
+-|
+-*/
++// ROUTE HALAMAN DEPAN (PUBLIC ACCESS)
++Route::get('/', [PublicSopController::class, 'index'])->name('home');
++Route::get('/unit/{id}', [PublicSopController::class, 'show'])->name('public.unit');
+ 
+-Route::get('/', function () {
+-    return view('welcome');
+-});
++// ROUTE LOGIN (Ini mengarah ke halaman login Filament jika user mengakses /login)
++Route::get('/login', function () {
++    return redirect('/admin/login');
++})->name('login');
+\ No newline at end of file

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Unit extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['nama', 'direktorat_id']; // Pastikan ada direktorat_id di tabel units
 
     public function direktorat(): BelongsTo
     {
@@ -18,9 +19,16 @@ class Unit extends Model
     {
         return $this->hasMany(Sop::class);
     }
-    
-    public function users(): HasMany
+
+    // Relasi khusus untuk menghitung jenis 'SOP'
+    public function sops_murni(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Sop::class)->where('jenis', 'SOP');
+    }
+
+    // Relasi khusus untuk menghitung jenis 'SOP AP'
+    public function sop_aps(): HasMany
+    {
+        return $this->hasMany(Sop::class)->where('jenis', 'SOP AP');
     }
 }

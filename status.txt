@@ -1,0 +1,63 @@
+﻿On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	deleted:    app/Filament/Resources/DirektoratResource.php
+	deleted:    app/Filament/Resources/DirektoratResource/Pages/CreateDirektorat.php
+	deleted:    app/Filament/Resources/DirektoratResource/Pages/EditDirektorat.php
+	deleted:    app/Filament/Resources/DirektoratResource/Pages/ListDirektorats.php
+	deleted:    app/Filament/Resources/DirektoratResource/Pages/ViewDirektorat.php
+	deleted:    app/Filament/Resources/DirektoratResource/RelationManagers/UnitsRelationManager.php
+	deleted:    app/Filament/Resources/SopResource.php
+	deleted:    app/Filament/Resources/SopResource/Pages/CreateSop.php
+	deleted:    app/Filament/Resources/SopResource/Pages/EditSop.php
+	deleted:    app/Filament/Resources/SopResource/Pages/ListSops.php
+	deleted:    app/Filament/Resources/UnitResource.php
+	deleted:    app/Filament/Resources/UnitResource/Pages/CreateUnit.php
+	deleted:    app/Filament/Resources/UnitResource/Pages/EditUnit.php
+	deleted:    app/Filament/Resources/UnitResource/Pages/ListUnits.php
+	deleted:    app/Filament/Resources/UserResource.php
+	deleted:    app/Filament/Resources/UserResource/Pages/CreateUser.php
+	deleted:    app/Filament/Resources/UserResource/Pages/EditUser.php
+	deleted:    app/Filament/Resources/UserResource/Pages/ListUsers.php
+	modified:   app/Models/Direktorat.php
+	modified:   app/Models/Sop.php
+	modified:   app/Models/Unit.php
+	modified:   app/Models/User.php
+	modified:   app/Policies/SopPolicy.php
+	modified:   app/Policies/UserPolicy.php
+	modified:   app/Providers/AppServiceProvider.php
+	modified:   app/Providers/Filament/AdminPanelProvider.php
+	modified:   composer.json
+	modified:   composer.lock
+	modified:   config/app.php
+	modified:   database/seeders/DatabaseSeeder.php
+	modified:   database/seeders/RolesAndPermissionsSeeder.php
+	modified:   package.json
+	modified:   resources/js/bootstrap.js
+	modified:   routes/web.php
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	app/Console/Commands/
+	app/Filament/Admin/
+	app/Filament/Pegawai/
+	app/Filament/Pengusul/
+	app/Filament/Verifikator/
+	app/Http/Controllers/PublicSopController.php
+	app/Providers/Filament/PegawaiPanelProvider.php
+	app/Providers/Filament/PengusulPanelProvider.php
+	app/Providers/Filament/VerifikatorPanelProvider.php
+	database/migrations/2025_12_07_000000_create_notifications_table.php
+	database/migrations/2025_12_08_021541_add_tanggal_verifikasi_to_sops_table.php
+	database/migrations/2025_12_08_024210_modify_status_in_sops_table.php
+	database/migrations/2025_12_08_024525_fix_status_column_type_in_sops.php
+	diff.txt
+	package-lock.json
+	public/images/
+	resources/views/filament/
+	status.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

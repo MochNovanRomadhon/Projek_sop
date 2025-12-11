@@ -2,150 +2,82 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Sop;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class SopPolicy
 {
-    use HandlesAuthorization;
-
     /**
      * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_sop');
+        return true;
     }
 
     /**
      * Determine whether the user can view the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
      */
     public function view(User $user, Sop $sop): bool
     {
-        return $user->can('view_sop');
+        // Admin & Verifikator boleh MELIHAT semua
+        if ($user->hasRole(['admin', 'verifikator'])) return true;
+        
+        // Pengusul/User lain hanya boleh lihat milik unitnya sendiri
+        return $user->unit_id === $sop->unit_id;
     }
 
     /**
      * Determine whether the user can create models.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
      */
     public function create(User $user): bool
     {
-        return $user->can('create_sop');
+        // Biasanya hanya pengusul yang membuat
+        return $user->hasRole('pengusul');
     }
 
     /**
      * Determine whether the user can update the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
      */
     public function update(User $user, Sop $sop): bool
     {
-        return $user->can('update_sop');
+        // [PERUBAHAN UTAMA]
+        // Kita HAPUS blok "if admin return true".
+        // Sekarang Admin pun TIDAK BISA edit konten SOP.
+
+        // 1. Pastikan user adalah PENGUSUL
+        if (! $user->hasRole('pengusul')) {
+            return false;
+        }
+
+        // 2. Pastikan SOP ini milik unit si Pengusul
+        if ($user->unit_id !== $sop->unit_id) {
+            return false;
+        }
+
+        // 3. Hanya status tertentu yang boleh diedit
+        // - Draft: Edit biasa
+        // - Ditolak: Edit revisi
+        // - Disetujui: Edit untuk mengajukan perubahan (Re-submission)
+        return in_array($sop->status, ['Draft', 'Ditolak', 'Disetujui']);
     }
 
     /**
      * Determine whether the user can delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
      */
     public function delete(User $user, Sop $sop): bool
     {
-        return $user->can('delete_sop');
-    }
+        // Admin boleh delete jika terpaksa (opsional, bisa dihapus jika ingin strict)
+        if ($user->hasRole('admin')) {
+            return true;
+        }
 
-    /**
-     * Determine whether the user can bulk delete.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
-     */
-    public function deleteAny(User $user): bool
-    {
-        return $user->can('delete_any_sop');
-    }
+        // Pengusul hanya boleh hapus Draft atau Ditolak
+        if ($user->hasRole('pengusul') && $user->unit_id === $sop->unit_id) {
+            return in_array($sop->status, ['Draft', 'Ditolak']);
+        }
 
-    /**
-     * Determine whether the user can permanently delete.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
-     */
-    public function forceDelete(User $user, Sop $sop): bool
-    {
-        return $user->can('force_delete_sop');
+        return false;
     }
-
-    /**
-     * Determine whether the user can permanently bulk delete.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
-     */
-    public function forceDeleteAny(User $user): bool
-    {
-        return $user->can('force_delete_any_sop');
-    }
-
-    /**
-     * Determine whether the user can restore.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
-     */
-    public function restore(User $user, Sop $sop): bool
-    {
-        return $user->can('restore_sop');
-    }
-
-    /**
-     * Determine whether the user can bulk restore.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
-     */
-    public function restoreAny(User $user): bool
-    {
-        return $user->can('restore_any_sop');
-    }
-
-    /**
-     * Determine whether the user can replicate.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Sop  $sop
-     * @return bool
-     */
-    public function replicate(User $user, Sop $sop): bool
-    {
-        return $user->can('replicate_sop');
-    }
-
-    /**
-     * Determine whether the user can reorder.
-     *
-     * @param  \App\Models\User  $user
-     * @return bool
-     */
-    public function reorder(User $user): bool
-    {
-        return $user->can('reorder_sop');
-    }
-
 }
